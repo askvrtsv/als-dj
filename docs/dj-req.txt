@@ -1,0 +1,10 @@
+curl 'https://www.artlebedev.ru/dj/json/list.html' \
+-X 'GET' \
+-H 'Cookie: _fbp=fb.1.1668611321470.735905334; _ym_d=1668611321; _ym_isad=2; _ym_uid=1668611321535383070; _ym_visorc=w; _ga=GA1.2.887065295.1668611321; _gat_UA-1013490-2=1; _gid=GA1.2.2146102142.1668611321; _lfa=LF1.1.c93f5becf13f32cc.1668611320756; alsFonts=true; _a_sid=2900F561-905F-4338-B7D5-1B308A7CE397; _am_uid=B123D85990BB5073' \
+-H 'Accept: application/json, text/plain, */*' \
+-H 'Accept-Encoding: gzip, deflate, br' \
+-H 'Host: www.artlebedev.ru' \
+-H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15' \
+-H 'Accept-Language: en-GB,en;q=0.9' \
+-H 'Referer: https://www.artlebedev.ru/dj/' \
+-H 'Connection: keep-alive'
