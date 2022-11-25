@@ -1,6 +1,11 @@
+import csv
 import logging
+from urllib.parse import quote
+
+import click
 
 from lib import (
+    fetch_djs_from_airtable,
     fetch_djs_from_website,
     find_dj_in_airtable,
     get_djs_table,
@@ -13,9 +18,13 @@ from lib import (
 logger = logging.getLogger(__name__)
 
 
-def main() -> None:
+@click.group()
+def cli():
     setup_logging()
 
+
+@cli.command()
+def fetch_djs():
     table = get_djs_table()
 
     website_djs = fetch_djs_from_website()
@@ -30,5 +39,60 @@ def main() -> None:
             update_dj(website_dj, stored_dj.airtable_record_id, table)
 
 
+@cli.command()
+@click.argument('playlist_file', type=click.File('w'))
+def generate_playlist(playlist_file) -> None:
+    table = get_djs_table()
+    stored_djs = fetch_djs_from_airtable(table)
+    
+    fieldnames = [
+        'Name',
+        'Artist',
+        'Composer',
+        'Album',
+        'Grouping',
+        'Work',
+        'Movement Number',
+        'Movement Count',
+        'Movement Name',
+        'Genre',
+        'Size',
+        'Time',
+        'Disc Number',
+        'Disc Count',
+        'Track Number',
+        'Track Count',
+        'Year',
+        'Date Modified',
+        'Date Added',
+        'Bit Rate',
+        'Sample Rate',
+        'Volume Adjustment',
+        'Kind',
+        'Equaliser',
+        'Comments',
+        'Plays',
+        'Last Played',
+        'Skips',
+        'Last Skipped',
+        'My Rating',
+        'Location',
+    ]
+    writer = csv.DictWriter(playlist_file, fieldnames=fieldnames, dialect='excel-tab')
+    writer.writeheader()
+
+    for dj in stored_djs:
+        writer.writerow({
+            'Name': dj.name,
+            'Track Number': dj.id,
+            'Kind': 'MPEG audio stream',
+            'Genre': ', '.join(dj.tags).capitalize(),
+            'Location': quote(dj.set_url or '', safe=':/'),
+            'Time': 60,
+            'Bit Rate': '320',
+            'Sample Rate': '44100',
+        })
+
+
 if __name__ == '__main__':
-    main()
+    cli()

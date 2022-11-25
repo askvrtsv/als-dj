@@ -7,7 +7,7 @@ from functools import cache
 import requests
 from pyairtable.api.table import Table
 
-from . import settings
+from als_dj import settings
 
 logger = logging.getLogger(__name__)
 
@@ -72,12 +72,15 @@ def make_dj_from_website(data: dict) -> DjWebsite:
 
 
 def make_dj_from_airtable(record: dict) -> DjAirtable:
+    record_date = record['fields'].get('Date', '1970-01-01')
+    record_date = dt.date.fromisoformat(record_date)
+
     return DjAirtable(
-        id=record['fields'].get('Id'),
-        date=record['fields'].get('Date'),
-        name=record['fields'].get('Name'),
-        playlist=record['fields'].get('Playlist'),
-        tags=record['fields'].get('Tags'),
+        id=record['fields'].get('Id', 0),
+        date=record_date,
+        name=record['fields'].get('Name', ''),
+        playlist=record['fields'].get('Playlist', ''),
+        tags=record['fields'].get('Tags', []),
         set_url=record['fields'].get('Set'),
         soundcloud_url=record['fields'].get('SoundCloud'),
         airtable_record_id=record['id'],
