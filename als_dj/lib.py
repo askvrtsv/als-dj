@@ -26,6 +26,7 @@ class DjWebsite:
 @dataclass
 class DjAirtable(DjWebsite):
     airtable_record_id: str
+    rating: int = 0
 
 
 def setup_logging() -> None:
@@ -84,6 +85,7 @@ def make_dj_from_airtable(record: dict) -> DjAirtable:
         set_url=record['fields'].get('Set'),
         soundcloud_url=record['fields'].get('SoundCloud'),
         airtable_record_id=record['id'],
+        rating=record['fields'].get('Rating', 0),
     )
 
 

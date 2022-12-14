@@ -1,10 +1,9 @@
-import csv
+import datetime
 import logging
-from urllib.parse import quote
 
 import click
 
-from lib import (
+from als_dj.lib import (
     fetch_djs_from_airtable,
     fetch_djs_from_website,
     find_dj_in_airtable,
@@ -14,6 +13,7 @@ from lib import (
     setup_logging,
     update_dj,
 )
+from als_dj.playlist import generate_tracks, generate_track_ids
 
 logger = logging.getLogger(__name__)
 
@@ -40,58 +40,46 @@ def fetch_djs():
 
 
 @cli.command()
-@click.argument('playlist_file', type=click.File('w'))
-def generate_playlist(playlist_file) -> None:
+@click.argument('xml_playlist_file', type=click.File('w'))
+def generate_playlist(xml_playlist_file) -> None:
     table = get_djs_table()
-    stored_djs = fetch_djs_from_airtable(table)
-    
-    fieldnames = [
-        'Name',
-        'Artist',
-        'Composer',
-        'Album',
-        'Grouping',
-        'Work',
-        'Movement Number',
-        'Movement Count',
-        'Movement Name',
-        'Genre',
-        'Size',
-        'Time',
-        'Disc Number',
-        'Disc Count',
-        'Track Number',
-        'Track Count',
-        'Year',
-        'Date Modified',
-        'Date Added',
-        'Bit Rate',
-        'Sample Rate',
-        'Volume Adjustment',
-        'Kind',
-        'Equaliser',
-        'Comments',
-        'Plays',
-        'Last Played',
-        'Skips',
-        'Last Skipped',
-        'My Rating',
-        'Location',
-    ]
-    writer = csv.DictWriter(playlist_file, fieldnames=fieldnames, dialect='excel-tab')
-    writer.writeheader()
+    djs = [dj for dj in fetch_djs_from_airtable(table) if dj.id]
+        
+    track_ids = '\n'.join(generate_track_ids(djs))
+    tracks = '\n'.join(generate_tracks(djs))
 
-    for dj in stored_djs:
-        writer.writerow({
-            'Name': dj.name,
-            'Track Number': dj.id,
-            'Kind': 'MPEG audio stream',
-            'Genre': ', '.join(dj.tags).capitalize(),
-            'Location': quote(dj.set_url or '', safe=':/'),
-            'Time': 60,
-            'Bit Rate': '320',
-            'Sample Rate': '44100',
-        })
+    xml_playlist_file.write(f"""\
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Major Version</key><integer>1</integer>
+    <key>Minor Version</key><integer>1</integer>
+    <key>Date</key><date>{datetime.datetime.now().isoformat()}</date>
+    <key>Application Version</key><string>1.3.0.138</string>
+    <key>Features</key><integer>5</integer>
+    <key>Show Content Ratings</key><true/>
+    <key>Tracks</key>
+    <dict>
+{tracks}
+    </dict>
+    <key>Playlists</key>
+    <array>
+        <dict>
+            <key>Name</key><string>Диджеи в Студии Лебедева</string>
+            <key>Description</key><string></string>
+            <key>Playlist ID</key><integer>4985</integer>
+            <key>Playlist Persistent ID</key><string>6639A40A9F7B167B</string>
+            <key>All Items</key><true/>
+            <key>Playlist Items</key>
+            <array>
+{track_ids}
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>"""
+    )
 
 
 if __name__ == '__main__':
